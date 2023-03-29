@@ -5,11 +5,22 @@ import '../model/category.dart';
 
 class CategoryRepository{
 
+  // 저장
   static Future<Category> save(Category category) async{
     var db = await SqlDatabase().database;
 
     var id =  await db?.insert(Category.tableName, category.toJson());
     return category.clone(id: id);
+  }
+
+  // 삭제
+  static Future<void> deleteById(int? id) async{
+    var db = await SqlDatabase().database;
+
+    db?.delete(Category.tableName,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   static Future<List<Category>> getList() async{
@@ -24,5 +35,15 @@ class CategoryRepository{
       return Category.fromJson(data);
     }).toList();
 
+  }
+
+  static Future<void> updateById(int id, String name) async{
+    var db = await SqlDatabase().database;
+    
+    await db?.update(Category.tableName,
+      {CategoryFields.name : name},
+      where: 'id = ? ',
+      whereArgs: [id],
+    );
   }
 }

@@ -12,10 +12,19 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  void createCategory(int num) async{
-    Category category = Category(name: '카테고리${num}');
-
+  void createCategory(String name) async{
+    Category category = Category(name: name);
     await CategoryRepository.save(category);
+    update();
+  }
+
+  void deleteCategory(int? id) async{
+    await CategoryRepository.deleteById(id);
+    update();
+  }
+
+  void updateCategory(int id, String name) async{
+    await CategoryRepository.updateById(id, name);
     update();
   }
 
@@ -24,34 +33,64 @@ class _HomeState extends State<Home> {
   Widget _category(Category category){
     var categoryId = category.id;
 
-    return GestureDetector(
-      onTap: (){
-        Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => QuizListView(
-                categoryId: categoryId
-            ))
-        );
-      },
-      child:
-      Container(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                    width: 10, height: 10,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.green)
-                ),
-                Text('질문${categoryId}')
-              ],
-            )
-          ],
+    return Row(
+      children: [
+        Expanded(
+          child: ListTile(
+            title: Text(category.name),
+            onTap: () async {
+              await Navigator.push(context,
+                MaterialPageRoute(builder: (context) => QuizListView(categoryId: categoryId))
+              );
+            },
+          ),
         ),
-      ),
-      // Child
+        IconButton(
+            onPressed: (){
+              String? inputText;
+              AlertDialog alertDialog = AlertDialog(
+                title: Text('변경할 이름을 입력하세요.'),
+                content: TextField(
+                  onChanged: (value) => inputText = value,
+                ),
+                actions: [
+                  TextButton(onPressed: (){
+                    Navigator.pop(context);
+                  }, child: Text('취소')),
+                  TextButton(onPressed: (){
+                    Navigator.pop(context);
+                    updateCategory(category.id!, inputText!);
+                  }, child: Text('변경')),
+                ],
+              );
+              showDialog(context: context, builder: (BuildContext context){
+                return alertDialog;
+              });
+            }, 
+            icon: const Icon(Icons.edit)
+        ),
+        IconButton(
+          onPressed: () {
+            AlertDialog alertDialog = AlertDialog(
+              title: Text('정말로 삭제하시겠습니까?'),
+              content: Text('카테고리의 모든 문제가 삭제됩니다.'),
+              actions: [
+                TextButton(onPressed: (){
+                  Navigator.pop(context);
+                }, child: Text('취소')),
+                TextButton(onPressed: (){
+                  Navigator.pop(context);
+                  deleteCategory(category.id);
+                }, child: Text('삭제')),
+              ],
+            );
+            showDialog(context: context, builder: (BuildContext context){
+              return alertDialog;
+            });
+          },
+          icon: const Icon(Icons.delete),
+        ),
+      ],
     );
   }
 
@@ -84,10 +123,36 @@ class _HomeState extends State<Home> {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => createCategory(1),
-        child: const Icon(Icons.add),
+      floatingActionButton: TextButton(
+        onPressed: (){
+          String? inputText;
+          AlertDialog alertDialog = AlertDialog(
+            title: Text('새 카테고리의 이름을 입력해주세요.'),
+            content: TextField(
+              onChanged: (value) => inputText = value,
+            ),
+            actions: [
+              TextButton(onPressed: (){
+                Navigator.pop(context);
+              }, child: Text('취소')),
+              TextButton(onPressed: (){
+                Navigator.pop(context);
+                if(inputText != null){
+                  createCategory(inputText!);
+                }
+              }, child: Text('생성')),
+            ],
+          );
+          showDialog(context: context, builder: (BuildContext context){
+            return alertDialog;
+          });
+        },
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all(Colors.blue),
+        ),
+        child: Text('카테고리 추가', style: TextStyle(color: Colors.white),),
       ),
+      floatingActionButtonLocation:  FloatingActionButtonLocation.centerFloat,
     );
   }
 }
