@@ -43,6 +43,69 @@ class _QuizListViewState extends State<QuizListView> {
     update();
   }
 
+  Widget modifyQuiz(Quiz quiz){
+    String? question;
+    String? answer;
+
+    var alertDialog = AlertDialog(
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('문제'),
+          TextFormField(
+            maxLines: 2,
+            onChanged: (value) => question = value,
+            initialValue: quiz.question,
+          ),
+          Text('정답'),
+          TextFormField(
+            maxLines: 2,
+            onChanged: (value) => answer = value,
+            initialValue: quiz.answer,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () {
+          Navigator.pop(context);
+        }, child: Text('닫기')),
+        TextButton(onPressed: () {
+          Navigator.pop(context);
+          if (question != null && answer != null) {
+            updateQuiz(quiz.id!, question!, answer!);
+          }
+        }, child: Text('수정')),
+      ],
+    );
+
+    return alertDialog;
+  }
+
+  Widget showQuiz(Quiz quiz){
+    AlertDialog alertDialog = AlertDialog(
+      alignment: Alignment.center,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('문제'),
+          Text(quiz.question),
+          SizedBox(height: 10),
+          Text('정답'),
+          Text(quiz.answer),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: (){
+          Navigator.pop(context);
+        }, child: Text('닫기'))
+      ],
+    );
+
+    return alertDialog;
+  }
+
   Widget solveQuiz(Quiz quiz){
     String? inputText;
 
@@ -56,7 +119,8 @@ class _QuizListViewState extends State<QuizListView> {
           Text(quiz.question),
           SizedBox(height: 10),
           Text('정답'),
-          TextField(
+          TextFormField(
+            maxLines: 2,
             onChanged: (value) => inputText = value,
             decoration: InputDecoration(
               hintText: '정답을 입력하세요.',
@@ -68,6 +132,12 @@ class _QuizListViewState extends State<QuizListView> {
         TextButton(onPressed: () {
           Navigator.pop(context);
         }, child: Text('취소')),
+        TextButton(onPressed: (){
+          Navigator.pop(context);
+          showDialog(context: context, builder: (BuildContext context){
+            return showQuiz(quiz);
+          });
+        }, child: Text('정답보기')),
         TextButton(onPressed: () {
           Navigator.pop(context);
           if (inputText == quiz.answer) {
@@ -82,6 +152,15 @@ class _QuizListViewState extends State<QuizListView> {
                 BuildContext context) {
               return AlertDialog(
                 content: Text('오답입니다'),
+                actions: [
+                  TextButton(onPressed: (){Navigator.pop(context);}, child: Text('닫기')),
+                  TextButton(onPressed: (){
+                    Navigator.pop(context);
+                    showDialog(context: context, builder: (BuildContext context){
+                      return showQuiz(quiz);
+                    });
+                  }, child: Text('정답보기'),)
+                ],
               );
             });
           }
@@ -109,37 +188,9 @@ class _QuizListViewState extends State<QuizListView> {
           showDialog(context: context, builder: (BuildContext context) {
             String? question;
             String? answer;
-            return AlertDialog(
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('문제'),
-                  TextFormField(
-                    onChanged: (value) => question = value,
-                    initialValue: quiz.question,
-                  ),
-                  Text('정답'),
-                  TextFormField(
-                    onChanged: (value) => answer = value,
-                    initialValue: quiz.answer,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(onPressed: () {
-                  Navigator.pop(context);
-                }, child: Text('닫기')),
-                TextButton(onPressed: () {
-                  Navigator.pop(context);
-                  if (question != null && answer != null) {
-                    updateQuiz(quiz.id!, question!, answer!);
-                  }
-                }, child: Text('수정')),
-              ],
-            );
+            return modifyQuiz(quiz);
           });
-        }, icon: const Icon(Icons.info_outline)),
+        }, icon: const Icon(Icons.settings)),
         IconButton(
           onPressed: () {
             showDialog(context: context, builder: (BuildContext context) {
@@ -215,7 +266,8 @@ class _QuizListViewState extends State<QuizListView> {
                               fontSize: 18,
                             ),
                           ),
-                          TextField(
+                          TextFormField(
+                            maxLines: 2,
                             onChanged: (value) => question = value,
                             decoration: InputDecoration(
                               hintText: '문제를 입력하세요.',
@@ -228,7 +280,8 @@ class _QuizListViewState extends State<QuizListView> {
                               fontSize: 18,
                             ),
                           ),
-                          TextField(
+                          TextFormField(
+                            maxLines: 2,
                             onChanged: (value) => answer = value,
                             decoration: InputDecoration(
                               hintText: '정답을 입력하세요.',

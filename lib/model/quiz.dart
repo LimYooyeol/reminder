@@ -18,7 +18,7 @@ class Quiz{
     this.id,
     required this.categoryId,
     required this.question,
-    required this.answer
+    required this.answer,
   });
 
   Map<String, dynamic> toJson(){
@@ -26,7 +26,7 @@ class Quiz{
       QuizFields.id: id,
       QuizFields.categoryId : categoryId,
       QuizFields.question: question,
-      QuizFields.answer: answer
+      QuizFields.answer: answer,
     };
   }
 
@@ -35,7 +35,7 @@ class Quiz{
       id: json[QuizFields.id] as int?,
       categoryId: json[QuizFields.categoryId] as int,
       question: json[QuizFields.question] == null? '' : json[QuizFields.question] as String,
-      answer: json[QuizFields.answer] == null? '': json[QuizFields.answer] as String
+      answer: json[QuizFields.answer] == null? '': json[QuizFields.answer] as String,
     );
   }
 

@@ -1,9 +1,14 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:reminder/model/category.dart';
 import 'package:reminder/model/history.dart';
 import 'package:reminder/repository/CategoryRepository.dart';
 import 'package:reminder/repository/HistoryRepository.dart';
+import 'package:reminder/repository/QuizRepository.dart';
 import 'package:reminder/view/quiz_list_view.dart';
+
+import '../model/quiz.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -14,8 +19,121 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
+  int? _baseCategory;
+
+  Widget showQuiz(Quiz quiz){
+    AlertDialog alertDialog = AlertDialog(
+      alignment: Alignment.center,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('문제'),
+          Text(quiz.question),
+          SizedBox(height: 10),
+          Text('정답'),
+          Text(quiz.answer),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: (){
+          Navigator.pop(context);
+        }, child: Text('닫기'))
+      ],
+    );
+
+    return alertDialog;
+  }
+
+  Widget solveQuiz(Quiz quiz){
+    String? inputText;
+
+    AlertDialog alertDialog = AlertDialog(
+      alignment: Alignment.center,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('문제'),
+          Text(quiz.question),
+          SizedBox(height: 10),
+          Text('정답'),
+          TextFormField(
+            maxLines: 2,
+            onChanged: (value) => inputText = value,
+            decoration: InputDecoration(
+              hintText: '정답을 입력하세요.',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () {
+          Navigator.pop(context);
+        }, child: Text('취소')),
+        TextButton(onPressed: (){
+          Navigator.pop(context);
+          showDialog(context: context, builder: (BuildContext context){
+            return showQuiz(quiz);
+          });
+        }, child: Text('정답보기')),
+        TextButton(onPressed: () {
+          Navigator.pop(context);
+          if (inputText == quiz.answer) {
+            showDialog(context: context, builder: (
+                BuildContext context) {
+              return AlertDialog(
+                content: Text('정답입니다'),
+              );
+            });
+          } else {
+            showDialog(context: context, builder: (
+                BuildContext context) {
+              return AlertDialog(
+                content: Text('오답입니다'),
+                actions: [
+                  TextButton(onPressed: (){Navigator.pop(context);}, child: Text('닫기')),
+                  TextButton(onPressed: (){
+                    Navigator.pop(context);
+                    showDialog(context: context, builder: (BuildContext context){
+                      return showQuiz(quiz);
+                    });
+                  }, child: Text('정답보기'),)
+                ],
+              );
+            });
+          }
+        }, child: Text('제출')),
+      ],
+    );
+
+    return alertDialog;
+  }
+
+  void updateBaseCategory(int? categoryId) async{
+    await HistoryRepository.updateBaseCategory(categoryId);
+    update();
+  }
+
   Future<History?> _loadHistory() async{
-    return await HistoryRepository.getHistory();
+    History? history = await HistoryRepository.getHistory();
+    if(history != null){
+      _baseCategory = history.baseCategory;
+    }
+
+    return history;
+  }
+
+  Future<Quiz?> findRandomQuizFromCategory(int? categoryId) async{
+    if(categoryId == null){
+      return null;
+    }
+    List<Quiz> quizzes = await QuizRepository.findAllByCategoryId(categoryId);
+    if(quizzes.isEmpty){
+      return null;
+    }
+
+    return quizzes[Random().nextInt(quizzes.length)];
   }
 
   void _makeHistory() async{
@@ -65,6 +183,14 @@ class _HomeState extends State<Home> {
               );
             },
           ),
+        ),
+        IconButton(onPressed: (){
+          if(_baseCategory == category.id){
+            updateBaseCategory(null);
+          }else{
+            updateBaseCategory(category.id!);
+          }
+        }, icon: (category.id == _baseCategory) ? Icon(Icons.check_box_outlined) : Icon(Icons.check_box_outline_blank_outlined)
         ),
         IconButton(
             onPressed: (){
@@ -117,6 +243,32 @@ class _HomeState extends State<Home> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      History? history = await HistoryRepository.getHistory();
+      if(history == null) { // 첫 접속
+        _makeHistory();
+        return;
+      }
+
+      int? baseCategory = history.baseCategory;
+      Quiz? quiz = await findRandomQuizFromCategory(baseCategory);
+
+      if(!mounted) return;
+      showDialog(context: context, builder: (BuildContext context) {
+        if(quiz == null) {
+          return AlertDialog(
+            content: Text('기본 카테고리를 설정하고\n(체크 박스 체크),\n카테고리에 하나 이상의 퀴즈를 저장하면 접속 시 퀴즈가 출제됩니다.'),
+          );
+        }
+        return solveQuiz(quiz);
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -142,6 +294,7 @@ class _HomeState extends State<Home> {
           }
         },
       ),
+
       floatingActionButton: FutureBuilder<History?>(
         future: _loadHistory(),
         builder: (context, snapshot){
@@ -169,25 +322,16 @@ class _HomeState extends State<Home> {
             return Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text('${history.continued} 일 연속으로 복습 중'),
                 TextButton(
                   onPressed: (){
-                    String? inputText;
                     AlertDialog alertDialog = AlertDialog(
-                      title: Text('새 카테고리의 이름을 입력해주세요.'),
-                      content: TextField(
-                        onChanged: (value) => inputText = value,
+                      content: Text(
+                        '에빙하우스 망각곡선에 따르면 초반에는 쉽게 잊혀지지만,\n자주 볼수록 잊혀지지 않는 장기 기억이 된다고 합니다!'
                       ),
                       actions: [
                         TextButton(onPressed: (){
                           Navigator.pop(context);
-                        }, child: Text('취소')),
-                        TextButton(onPressed: (){
-                          Navigator.pop(context);
-                          if(inputText != null){
-                            createCategory(inputText!);
-                          }
-                        }, child: Text('생성')),
+                        }, child: Text('닫기')),
                       ],
                     );
                     showDialog(context: context, builder: (BuildContext context){
@@ -197,7 +341,7 @@ class _HomeState extends State<Home> {
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(Colors.blue),
                   ),
-                  child: Text('카테고리 추가', style: TextStyle(color: Colors.white),),
+                  child: Text('${history.continued} 일 연속으로 복습 중', style: TextStyle(color: Colors.white),),
                 ),
               ],
             );
@@ -209,6 +353,58 @@ class _HomeState extends State<Home> {
         },
       ),
       floatingActionButtonLocation:  FloatingActionButtonLocation.centerFloat,
+      bottomNavigationBar:  BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            TextButton(onPressed: (){
+              String? inputText;
+              AlertDialog alertDialog = AlertDialog(
+                title: Text('새 카테고리의 이름을 입력해주세요.'),
+                content: TextField(
+                  onChanged: (value) => inputText = value,
+                ),
+                actions: [
+                  TextButton(onPressed: (){
+                    Navigator.pop(context);
+                  }, child: Text('취소')),
+                  TextButton(onPressed: (){
+                    Navigator.pop(context);
+                    if(inputText != null){
+                      createCategory(inputText!);
+                    }
+                  }, child: Text('생성')),
+                ],
+              );
+              showDialog(context: context, builder: (BuildContext context){
+                return alertDialog;
+              });
+            }, child: Text('카테고리 추가',
+              style: TextStyle(color: Colors.black),)),
+            TextButton(onPressed: () async {
+              Quiz? quiz = await findRandomQuizFromCategory(_baseCategory);
+              if(!mounted) return;
+              if(quiz == null){
+                showDialog(context: context, builder: (BuildContext context){
+                  String msg = '카테고리에 문제를 하나 이상 추가해주세요.';
+                  if(_baseCategory == null){
+                    msg = '기본 카테고리를 선택해주세요.(체크 박스)';
+                  }
+                  return AlertDialog(
+                    content: Text(msg),
+                  );
+                });
+              }else{
+                showDialog(context: context, builder: (BuildContext context){
+                  return solveQuiz(quiz);
+                });
+              }
+
+            }, child: Text('랜덤 풀기',
+              style: TextStyle(color: Colors.black),)),
+          ],
+        ),
+      ),
     );
   }
 }

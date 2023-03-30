@@ -45,9 +45,11 @@ class SqlDatabase{
 
     await db.execute(''' 
       create table ${History.tableName}(
-        ${HistoryFields.id}         integer primary key autoincrement,
-        ${HistoryFields.lastDate}   text    not null,
-        ${HistoryFields.continued}  integer not null
+        ${HistoryFields.id}           integer primary key autoincrement,
+        ${HistoryFields.lastDate}     text    not null,
+        ${HistoryFields.continued}    integer not null,
+        ${HistoryFields.baseCategory} integer,
+        FOREIGN KEY (${HistoryFields.baseCategory}) REFERENCES ${Category.tableName}(id) on delete set null
       );
     ''');
   }

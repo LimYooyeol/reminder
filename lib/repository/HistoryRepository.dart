@@ -19,8 +19,9 @@ class HistoryRepository{
     var db = await SqlDatabase().database;
 
     var result = await db?.query(History.tableName, columns: [
-     HistoryFields.lastDate,
-     HistoryFields.continued,
+      HistoryFields.lastDate,
+      HistoryFields.continued,
+      HistoryFields.baseCategory,
     ]);
 
     var listResult = result!.map((data){
@@ -42,6 +43,19 @@ class HistoryRepository{
       {
         HistoryFields.lastDate: lastDate.toIso8601String(),
         HistoryFields.continued: continued,
+      },
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+  }
+
+  static Future<void> updateBaseCategory(int? categoryId) async{
+
+    var db = await SqlDatabase().database;
+
+    await db?.update(History.tableName,
+      {
+        HistoryFields.baseCategory: categoryId,
       },
       where: 'id = ?',
       whereArgs: [1],
