@@ -18,7 +18,7 @@ class CategoryRepository{
     var db = await SqlDatabase().database;
 
     db?.delete(Category.tableName,
-      where: 'id = ?',
+      where: '${CategoryFields.id} = ?',
       whereArgs: [id],
     );
   }
@@ -42,7 +42,7 @@ class CategoryRepository{
     
     await db?.update(Category.tableName,
       {CategoryFields.name : name},
-      where: 'id = ? ',
+      where: '${CategoryFields.id} = ?',
       whereArgs: [id],
     );
   }

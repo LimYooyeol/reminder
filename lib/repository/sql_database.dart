@@ -2,6 +2,8 @@ import 'package:path/path.dart';
 import 'package:reminder/model/category.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../model/quiz.dart';
+
 class SqlDatabase{
   static final SqlDatabase instance = SqlDatabase._instance();
 
@@ -18,6 +20,7 @@ class SqlDatabase{
   Future<void> _initDataBase() async {
     var databasePath = await getDatabasesPath();
     String path = join(databasePath, 'reminder.db');
+    await deleteDatabase(path);
     _database = await openDatabase(path, version: 1, onCreate: _databaseCreate);
   }
 
@@ -26,7 +29,17 @@ class SqlDatabase{
       create table ${Category.tableName}(
         ${CategoryFields.id}    integer   primary key autoincrement, 
         ${CategoryFields.name}  text      not null
-      )
+      );
+    ''');
+
+    await db.execute(''' 
+      create table ${Quiz.tableName}(
+        ${QuizFields.id}          integer   primary key autoincrement,
+        ${QuizFields.categoryId}  integer,
+        ${QuizFields.question}    text    not null,
+        ${QuizFields.answer}      text    not null,
+        FOREIGN KEY (${QuizFields.categoryId}) REFERENCES ${Category.tableName}(id) ON DELETE CASCADE
+      ); 
     ''');
   }
 

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class CategoryFields{
   static final String id = 'id';
   static final String name = 'name';

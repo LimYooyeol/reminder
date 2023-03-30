@@ -18,9 +18,8 @@ class _HomeState extends State<Home> {
     update();
   }
 
-  void deleteCategory(int? id) async{
-    await CategoryRepository.deleteById(id);
-    update();
+  Future<List<Category>> _loadCategoryList() async{
+    return await CategoryRepository.getList();
   }
 
   void updateCategory(int id, String name) async{
@@ -28,11 +27,16 @@ class _HomeState extends State<Home> {
     update();
   }
 
+  void deleteCategory(int? id) async{
+    await CategoryRepository.deleteById(id);
+    update();
+  }
+
+
+
   void update() => setState(() {});
 
   Widget _category(Category category){
-    var categoryId = category.id;
-
     return Row(
       children: [
         Expanded(
@@ -40,7 +44,7 @@ class _HomeState extends State<Home> {
             title: Text(category.name),
             onTap: () async {
               await Navigator.push(context,
-                MaterialPageRoute(builder: (context) => QuizListView(categoryId: categoryId))
+                MaterialPageRoute(builder: (context) => QuizListView(category: category))
               );
             },
           ),
@@ -50,8 +54,9 @@ class _HomeState extends State<Home> {
               String? inputText;
               AlertDialog alertDialog = AlertDialog(
                 title: Text('변경할 이름을 입력하세요.'),
-                content: TextField(
+                content: TextFormField(
                   onChanged: (value) => inputText = value,
+                  initialValue: category.name,
                 ),
                 actions: [
                   TextButton(onPressed: (){
@@ -94,9 +99,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Future<List<Category>> _loadCategoryList() async{
-    return await CategoryRepository.getList();
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
