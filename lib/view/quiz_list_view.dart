@@ -1,10 +1,19 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' as foundation;
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:reminder/model/category.dart';
 import 'package:reminder/repository/QuizRepository.dart';
 
 import '../model/quiz.dart';
+
+const Map<String, String> UNIT_ID = foundation.kReleaseMode? {
+  'android': 'ca-app-pub-2917734040573161/1953416706',
+}: {
+  'android' : 'ca-app-pub-3940256099942544/6300978111',
+};
+
 
 class QuizListView extends StatefulWidget {
   final Category category;
@@ -216,7 +225,19 @@ class _QuizListViewState extends State<QuizListView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    TargetPlatform os = Theme.of(context).platform;
+
+    BannerAd banner = BannerAd(
+      size: AdSize.banner,
+      adUnitId: UNIT_ID[os == TargetPlatform.iOS ? 'ios' : 'android']!,
+      listener: BannerAdListener(
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {},
+        onAdLoaded: (_) {},
+      ),
+      request: AdRequest(),
+    )..load();
+
+    var scat = Scaffold(
       appBar: AppBar(
         title: Text('Reminder'),
       ),
@@ -364,6 +385,25 @@ class _QuizListViewState extends State<QuizListView> {
           );
         },
       ),
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Expanded(child: scat),
+        SizedBox(
+          height: 5,
+          width: double.infinity,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: Colors.blue),
+          ),
+        ),
+        SizedBox(
+          height: 50,
+          width: double.infinity,
+          child: AdWidget(ad: banner),
+        ),
+      ],
     );
   }
 }

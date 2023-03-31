@@ -1,7 +1,9 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:reminder/model/category.dart';
+import 'package:flutter/foundation.dart' as foundation;
+import 'package:flutter/material.dart';
 import 'package:reminder/model/history.dart';
 import 'package:reminder/repository/CategoryRepository.dart';
 import 'package:reminder/repository/HistoryRepository.dart';
@@ -9,6 +11,13 @@ import 'package:reminder/repository/QuizRepository.dart';
 import 'package:reminder/view/quiz_list_view.dart';
 
 import '../model/quiz.dart';
+
+const Map<String, String> UNIT_ID = foundation.kReleaseMode? {
+  'android': 'ca-app-pub-2917734040573161/1953416706',
+}: {
+  'android' : 'ca-app-pub-3940256099942544/6300978111',
+};
+
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -270,7 +279,19 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    TargetPlatform os = Theme.of(context).platform;
+
+    BannerAd banner = BannerAd(
+        size: AdSize.banner,
+        adUnitId: UNIT_ID[os == TargetPlatform.iOS ? 'ios' : 'android']!,
+        listener: BannerAdListener(
+          onAdFailedToLoad: (Ad ad, LoadAdError error) {},
+          onAdLoaded: (_) {},
+        ),
+        request: AdRequest(),
+    )..load();
+
+    var scat = Scaffold(
       appBar: AppBar(
         title: Text('Reminder'),
       ),
@@ -316,7 +337,7 @@ class _HomeState extends State<Home> {
                 _updateHistory(now, history.continued + 1);
               }else{ // 연속 접속 끝
                 _updateHistory(now, 1);
-             }
+              }
             }
 
             return Column(
@@ -326,7 +347,7 @@ class _HomeState extends State<Home> {
                   onPressed: (){
                     AlertDialog alertDialog = AlertDialog(
                       content: Text(
-                        '에빙하우스 망각곡선에 따르면 초반에는 쉽게 잊혀지지만,\n자주 볼수록 잊혀지지 않는 장기 기억이 된다고 합니다!'
+                          '에빙하우스 망각곡선에 따르면 초반에는 쉽게 잊혀지지만,\n자주 볼수록 잊혀지지 않는 장기 기억이 된다고 합니다!'
                       ),
                       actions: [
                         TextButton(onPressed: (){
@@ -405,6 +426,26 @@ class _HomeState extends State<Home> {
           ],
         ),
       ),
+    );
+
+    // return scat;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Expanded(child: scat),
+        SizedBox(
+          height: 5,
+          width: double.infinity,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: Colors.blue),
+          ),
+        ),
+        SizedBox(
+          height: 50,
+          width: double.infinity,
+          child: AdWidget(ad: banner),
+        ),
+      ],
     );
   }
 }
