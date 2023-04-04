@@ -239,7 +239,7 @@ class _QuizListViewState extends State<QuizListView> {
 
     var scat = Scaffold(
       appBar: AppBar(
-        title: Text('Reminder'),
+        title: Text('리마인더'),
       ),
       body: FutureBuilder<List<Quiz>>(
         future: _loadQuizList(),

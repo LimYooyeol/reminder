@@ -293,14 +293,14 @@ class _HomeState extends State<Home> {
 
     var scat = Scaffold(
       appBar: AppBar(
-        title: Text('Reminder'),
+        title: Text('리마인더'),
       ),
       body: FutureBuilder<List<Category>>(
         future: _loadCategoryList(),
         builder: (context, snapshot) {
           if(snapshot.hasError){
             return const Center(
-              child: Text('오류'),
+              // child: Text('오류'),
             );
           }
           if(snapshot.hasData){
