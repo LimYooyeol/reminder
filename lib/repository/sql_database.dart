@@ -18,11 +18,15 @@ class SqlDatabase{
     return instance;
   }
 
+
   Future<void> _initDataBase() async {
     var databasePath = await getDatabasesPath();
     String path = join(databasePath, 'reminder.db');
-    // await deleteDatabase(path);
+
     _database = await openDatabase(path, version: 1, onCreate: _databaseCreate);
+    if(_database != null){
+      await _database!.execute("PRAGMA foreign_keys = ON");
+    }
   }
 
   void _databaseCreate(Database db, int version) async{
