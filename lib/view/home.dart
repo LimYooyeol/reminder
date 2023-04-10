@@ -269,7 +269,11 @@ class _HomeState extends State<Home> {
       showDialog(context: context, builder: (BuildContext context) {
         if(quiz == null) {
           return AlertDialog(
-            content: Text('기본 카테고리를 설정하고\n(체크 박스 체크),\n카테고리에 하나 이상의 퀴즈를 저장하면 접속 시 퀴즈가 출제됩니다.'),
+            content: Text(
+              '1. 카테고리 추가(하단 좌측)\n'
+              '2. 카테고리 이동 후 문제 추가\n'
+              '3. 기본 카테고리 설정(체크박스 체크)'
+            ),
           );
         }
         return solveQuiz(quiz);
@@ -409,7 +413,7 @@ class _HomeState extends State<Home> {
                 showDialog(context: context, builder: (BuildContext context){
                   String msg = '카테고리에 문제를 하나 이상 추가해주세요.';
                   if(_baseCategory == null){
-                    msg = '기본 카테고리를 선택해주세요.(체크 박스)';
+                    msg = '기본 카테고리를 선택해주세요.\n(카테고리명 우측 체크 박스 체크)';
                   }
                   return AlertDialog(
                     content: Text(msg),
