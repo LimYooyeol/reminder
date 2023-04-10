@@ -53,8 +53,8 @@ class _QuizListViewState extends State<QuizListView> {
   }
 
   Widget modifyQuiz(Quiz quiz){
-    String? question;
-    String? answer;
+    String question = quiz.question;
+    String answer = quiz.answer;
 
     var alertDialog = AlertDialog(
       content: Column(
